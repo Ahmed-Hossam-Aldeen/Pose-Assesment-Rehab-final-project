@@ -1,6 +1,44 @@
 import cv2 as cv
 import numpy as np
 
+BODY_PARTS = { "Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4,
+               "LShoulder": 5, "LElbow": 6, "LWrist": 7, "RHip": 8, "RKnee": 9,
+               "RAnkle": 10, "LHip": 11, "LKnee": 12, "LAnkle": 13, "REye": 14,
+               "LEye": 15, "REar": 16, "LEar": 17, "Background": 18 }
+
+POSE_PAIRS = [ ["Neck", "RShoulder"], ["Neck", "LShoulder"], ["RShoulder", "RElbow"],
+               ["RElbow", "RWrist"], ["LShoulder", "LElbow"], ["LElbow", "LWrist"],
+               ["Neck", "RHip"], ["RHip", "RKnee"], ["RKnee", "RAnkle"], ["Neck", "LHip"],
+               ["LHip", "LKnee"], ["LKnee", "LAnkle"], ["Neck", "Nose"], ["Nose", "REye"],
+               ["REye", "REar"], ["Nose", "LEye"], ["LEye", "LEar"] ]
+
+##########################################################################################
+def calculate_angle(p1, p2, p3):
+    """
+    Calculates angle between three points using trigonometry.
+
+    Args:
+        p1 (tuple): First point.
+        p2 (tuple): Second point (vertex).
+        p3 (tuple): Third point.
+
+    Returns:
+        float: Angle in degrees.
+    """
+    if (p1== None) or (p2== None) or (p3 == None):
+        return
+    
+    else:
+        v1 = np.array([p1[0] - p2[0], p1[1] - p2[1]])
+        v2 = np.array([p3[0] - p2[0], p3[1] - p2[1]])
+        dot_product = np.dot(v1, v2)
+        magnitudes_product = np.linalg.norm(v1) * np.linalg.norm(v2)
+        cos_theta = dot_product / magnitudes_product
+        angle_rad = np.arccos(cos_theta)
+        angle_deg = np.degrees(angle_rad)
+        angle_deg = round(angle_deg, 2)
+        return angle_deg
+
 def calculate_joint_angles(points):
     """
     Calculates joint angles from detected pose points.
@@ -30,46 +68,11 @@ def calculate_joint_angles(points):
 
     return angles
 
-def calculate_angle(p1, p2, p3):
-    """
-    Calculates angle between three points using trigonometry.
 
-    Args:
-        p1 (tuple): First point.
-        p2 (tuple): Second point (vertex).
-        p3 (tuple): Third point.
 
-    Returns:
-        float: Angle in degrees.
-    """
-    if (p1== None) or (p2== None) or (p3 == None):
-        return
-    
-    else:
-        v1 = np.array([p1[0] - p2[0], p1[1] - p2[1]])
-        v2 = np.array([p3[0] - p2[0], p3[1] - p2[1]])
-        dot_product = np.dot(v1, v2)
-        magnitudes_product = np.linalg.norm(v1) * np.linalg.norm(v2)
-        cos_theta = dot_product / magnitudes_product
-        angle_rad = np.arccos(cos_theta)
-        angle_deg = np.degrees(angle_rad)
-        angle_deg = round(angle_deg, 2)
-        return angle_deg
-
-BODY_PARTS = { "Nose": 0, "Neck": 1, "RShoulder": 2, "RElbow": 3, "RWrist": 4,
-               "LShoulder": 5, "LElbow": 6, "LWrist": 7, "RHip": 8, "RKnee": 9,
-               "RAnkle": 10, "LHip": 11, "LKnee": 12, "LAnkle": 13, "REye": 14,
-               "LEye": 15, "REar": 16, "LEar": 17, "Background": 18 }
-
-POSE_PAIRS = [ ["Neck", "RShoulder"], ["Neck", "LShoulder"], ["RShoulder", "RElbow"],
-               ["RElbow", "RWrist"], ["LShoulder", "LElbow"], ["LElbow", "LWrist"],
-               ["Neck", "RHip"], ["RHip", "RKnee"], ["RKnee", "RAnkle"], ["Neck", "LHip"],
-               ["LHip", "LKnee"], ["LKnee", "LAnkle"], ["Neck", "Nose"], ["Nose", "REye"],
-               ["REye", "REar"], ["Nose", "LEye"], ["LEye", "LEar"] ]
-
-inWidth = 300
-inHeight = 300
-confidince = 0.2
+inWidth = 256
+inHeight = 256
+confidince = 0.25
 
 net = cv.dnn.readNetFromTensorflow("graph_opt.pb")
 
@@ -119,7 +122,7 @@ while cv.waitKey(1) < 0:
             cv.ellipse(frame, points[idFrom], (3, 3), 0, 0, 360, (0, 0, 255), cv.FILLED)
             cv.ellipse(frame, points[idTo], (3, 3), 0, 0, 360, (0, 0, 255), cv.FILLED)
 
-    #print(points[2])
+
     print(calculate_joint_angles(points))
 
 
