@@ -6,7 +6,7 @@ from PyQt5.uic.properties import QtCore
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QWidget, QApplication, QLabel
+from PyQt5.QtWidgets import QWidget, QApplication, QLabel,QFileDialog
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import sys
 
@@ -145,8 +145,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.disply_width = 600
         self.display_height = 800
-        
 
+        self.predict.clicked.connect(self.predict_one_image)
         # create the video capture thread
         self.thread = VideoThread()
         # connect its signal to the update_image slot
@@ -162,6 +162,65 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def stop_thread(self):
         self.thread.terminate()
+
+
+    def predict_one_image(self):
+        path = QFileDialog.getOpenFileName(self, 'Open a file', '',)
+        if path != ('', ''):
+            img_path = path[0]
+
+            image_width=600
+            image_height=600
+            net = cv.dnn.readNetFromTensorflow("graph_opt.pb")
+            threshold=0.1
+
+            img = cv.imread(img_path,cv.IMREAD_UNCHANGED)
+            img = cv.cvtColor(img, cv.COLOR_RGBA2RGB)
+
+            photo_height=img.shape[0]
+            photo_width=img.shape[1]
+            net.setInput(cv.dnn.blobFromImage(img, 1.0, (image_width, image_height), (127.5, 127.5, 127.5), swapRB=True, crop=False))
+
+            out = net.forward()
+            out = out[:, :19, :, :] 
+
+            assert(len(BODY_PARTS) == out.shape[1])
+
+            points = []
+            for i in range(len(BODY_PARTS)):
+                    # Slice heatmap of corresponging body's part.
+                heatMap = out[0, i, :, :]
+
+                    # Originally, we try to find all the local maximums. To simplify a sample
+                    # we just find a global one. However only a single pose at the same time
+                    # could be detected this way.
+                _, conf, _, point = cv.minMaxLoc(heatMap)
+                x = (photo_width * point[0]) / out.shape[3]
+                y = (photo_height * point[1]) / out.shape[2]
+                # Add a point if it's confidence is higher than threshold.
+                points.append((int(x), int(y)) if conf > threshold else None)
+
+
+            for pair in POSE_PAIRS:
+                partFrom = pair[0]
+                partTo = pair[1]
+                assert(partFrom in BODY_PARTS)
+                assert(partTo in BODY_PARTS)
+
+                idFrom = BODY_PARTS[partFrom]
+                idTo = BODY_PARTS[partTo]
+
+                if points[idFrom] and points[idTo]:
+                    cv.line(img, points[idFrom], points[idTo], (0, 255, 0), 3)
+                    cv.ellipse(img, points[idFrom], (3, 3), 0, 0, 360, (0, 0, 255), cv.FILLED)
+                    cv.ellipse(img, points[idTo], (3, 3), 0, 0, 360, (0, 0, 255), cv.FILLED)
+
+            t, _ = net.getPerfProfile()
+
+            qt_img = self.convert_cv_qt(img)
+            self.image_label_2.setPixmap(qt_img)
+            self.target_readings.setText(str(calculate_joint_angles(points)))
+            #cv.imshow("cool",img)
 
     @pyqtSlot(np.ndarray)
     def update_image(self, cv_img):
