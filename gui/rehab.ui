@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1372</width>
+    <width>1411</width>
     <height>846</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>1351</width>
+      <width>661</width>
       <height>511</height>
      </rect>
     </property>
@@ -31,19 +31,19 @@
       <rect>
        <x>20</x>
        <y>30</y>
-       <width>1301</width>
+       <width>641</width>
        <height>431</height>
       </rect>
      </property>
      <property name="text">
-      <string>Video</string>
+      <string>V</string>
      </property>
     </widget>
     <widget class="QPushButton" name="StartVideo">
      <property name="geometry">
       <rect>
-       <x>610</x>
-       <y>480</y>
+       <x>170</x>
+       <y>470</y>
        <width>93</width>
        <height>28</height>
       </rect>
@@ -55,8 +55,8 @@
     <widget class="QPushButton" name="StopVideo">
      <property name="geometry">
       <rect>
-       <x>750</x>
-       <y>480</y>
+       <x>370</x>
+       <y>470</y>
        <width>93</width>
        <height>28</height>
       </rect>
@@ -66,13 +66,55 @@
      </property>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="groupBox_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>540</y>
+      <width>1361</width>
+      <height>261</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Joint angles</string>
+    </property>
+    <widget class="QLabel" name="readings">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>50</y>
+       <width>1291</width>
+       <height>121</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 75 13pt &quot;MS Shell Dlg 2&quot;;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_3">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>10</y>
+      <width>691</width>
+      <height>511</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Target Pose</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1372</width>
+     <width>1411</width>
      <height>26</height>
     </rect>
    </property>

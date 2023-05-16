@@ -77,9 +77,9 @@ def calculate_joint_angles(points):
     return angles
 
 
-class VideoThread(QThread):
+class VideoThread(QThread):    
     change_pixmap_signal = pyqtSignal(np.ndarray)
-
+    reading = pyqtSignal(np.ndarray)
 
     def run(self):
         # capture from web cam
@@ -128,15 +128,13 @@ class VideoThread(QThread):
                     cv.line(frame, points[idFrom], points[idTo], (0, 255, 0), 3)
                     cv.ellipse(frame, points[idFrom], (3, 3), 0, 0, 360, (0, 0, 255), cv.FILLED)
                     cv.ellipse(frame, points[idTo], (3, 3), 0, 0, 360, (0, 0, 255), cv.FILLED)
+            
+            #t, _ = net.getPerfProfile()
+            #freq = cv.getTickFrequency() / 1000
+            #cv.putText(frame, '%.2fms' % (t / freq), (10, 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+            self.change_pixmap_signal.emit(frame)
+            self.reading.emit(np.array(points))
 
-
-            print(calculate_joint_angles(points))
-
-
-            t, _ = net.getPerfProfile()
-            freq = cv.getTickFrequency() / 1000
-            cv.putText(frame, '%.2fms' % (t / freq), (10, 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
-            self.change_pixmap_signal.emit(frame)    
 
 class MainWindow(QtWidgets.QMainWindow):      
     def __init__(self):   
@@ -145,13 +143,15 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi('rehab.ui', self)
         self.setWindowTitle("Instrument")
 
-        self.disply_width = 640
-        self.display_height = 480
+        self.disply_width = 600
+        self.display_height = 800
         
+
         # create the video capture thread
         self.thread = VideoThread()
         # connect its signal to the update_image slot
         self.thread.change_pixmap_signal.connect(self.update_image)
+        self.thread.reading.connect(self.update_readings)
         # start the thread
         self.StartVideo.clicked.connect(self.start_thread)
         self.StopVideo.clicked.connect(self.stop_thread)
@@ -159,6 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def start_thread(self):
         self.thread.start()
+        
     def stop_thread(self):
         self.thread.terminate()
 
@@ -167,6 +168,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """Updates the image_label with a new opencv image"""
         qt_img = self.convert_cv_qt(cv_img)
         self.image_label.setPixmap(qt_img)
+
+    @pyqtSlot(np.ndarray)
+    def update_readings(self, points):
+        self.readings.setText(str(calculate_joint_angles(points)))  
+         
     
     def convert_cv_qt(self, cv_img):
         """Convert from an opencv image to QPixmap"""
